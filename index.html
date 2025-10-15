@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="./node_modules/bootstrap/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="style/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="row pt-2 themeBlack" id="theme">
+        <div class="col-12 border border-black pt-2 pb-2">
+          <!--Header-->
+          <button id="themeButton" class="themeButton">
+            <img
+              src="/public/sun1.svg"
+              alt=""
+              width="25px"
+              id="sunSvg"
+              style="position: absolute; top: 15px"
+            />
+            <img
+              src="/public/moon.svg"
+              alt=""
+              width="25px"
+              id="moonSvg"
+              class="hidden"
+              style="position: absolute; top: 15px"
+            />
+          </button>
+        </div>
+        <div class="col-6 border border-black pt-2 pb-5 preview">
+          <video id="preview" controls width="100%" height="auto"></video>
+        </div>
+        <div class="col-6 border border-black pt-2 pb-5">
+          details-> will handle at last
+        </div>
+        <div class="col-3 border border-black pt-5 pb-5 section3">
+          <div class="media p-2 text-center">
+            <span>add your media</span>
+            <p>drag or import media here</p>
+            <input type="file" id="file-input" accept="video/*" hidden />
+            <button type="button" class="btn btn-primary" id="import-btn">
+              Import media
+            </button>
+          </div>
+        </div>
+        <div class="col-3 border border-black text-center pt-1">
+          <h4>Tool bar</h4>
+        </div>
+        <div class="col-6 border border-black pt-2 pb-5">
+          drag and drop the video to the time line
+          <!-- Timeline -->
+          <div class="timeline">
+            <div class="timeline" id="timeline" aria-label="Video timeline">
+              <div class="ticks" aria-hidden="true"></div>
+              <div class="labels" aria-hidden="true" id="labels"></div>
+
+              <div class="time-marker" id="marker" style="display: none">
+                00:00
+              </div>
+              <!-- Drop zone for video clips -->
+              <div class="timeline-drop-zone" id="timelineDropZone">
+                <div class="drop-hint">Drag video clips here</div>
+                <div
+                  class="video-clips-container"
+                  id="videoClipsContainer"
+                ></div>
+              </div>
+            </div>
+            <div class="playhead" id="playhead">
+              <div class="playhead-handle" aria-label="scrub handle"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Media Bin -->
+      <div class="media-bin">
+        <h3>Media Files</h3>
+        <div>
+          <ul id="media-list"></ul>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/themController.js"></script>
+    <script src="/js/file.js"></script>
+  </body>
+</html>

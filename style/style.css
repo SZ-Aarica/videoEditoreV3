@@ -1,0 +1,24 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+body{
+    background-color: #000000;
+}
+.themeBlack {
+  background-color: #324A5F;
+  color: #f2f5f9; /* text color for dark theme */
+}
+.themeLight {
+  background-color: #CCC9DC;
+  color: #1a1a1a; /* text color for light theme */
+}
+.themeButton{
+    border: none;
+    background: none;
+}
+ul{
+ list-style-type: none;
+ padding: 0;
+ margin: 0;
+}
+.hidden{
+    display: none;
+}
