@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Video Editor</title>
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="./node_modules/bootstrap/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="style/timeLine.css" />
+    <link rel="stylesheet" href="style/style.css" />
+  </head>
+  <body>
+    <div class="container-fluid h-100">
+      <!-- TOP TOOLBAR -->
+      <div class="row themeBlack" id="theme">
+        <div
+          class="col-12 border border-black pt-2 pb-2 d-flex justify-content-between align-items-center"
+        >
+          <!-- Theme Toggle -->
+          <button id="themeButton" class="themeButton btn btn-sm">
+            <img
+              src="/public/sun1.svg"
+              alt="Light theme"
+              width="25px"
+              id="sunSvg"
+            />
+            <img
+              src="/public/moon.svg"
+              alt="Dark theme"
+              width="25px"
+              id="moonSvg"
+              class="hidden"
+            />
+          </button>
+
+          <!-- Main Controls -->
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-secondary" id="newProject">
+              New
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" id="saveProject">
+              Save
+            </button>
+            <button class="btn btn-sm btn-primary" id="exportBtn">
+              Export
+            </button>
+          </div>
+
+          <!-- Timeline Controls -->
+          <div class="d-flex gap-2 align-items-center">
+            <button class="btn btn-sm btn-outline-secondary" id="zoomIn">
+              Zoom In
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" id="zoomOut">
+              Zoom Out
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" id="snapToggle">
+              Snap: On
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN EDITING AREA -->
+      <div class="row flex-grow-1" style="height: calc(100vh - 200px)">
+        <!-- LEFT SIDEBAR -->
+        <div class="col-2 border border-black d-flex flex-column">
+          <!-- Project Panel -->
+          <div class="p-2 border-bottom">
+            <h6 class="mb-2">Project</h6>
+            <div id="project-tree">
+              <div class="project-folder">Sequences</div>
+              <div class="project-folder">Media</div>
+              <div class="project-folder">Effects</div>
+            </div>
+          </div>
+
+          <!-- Media Browser -->
+          <div class="p-2 border-bottom flex-grow-1">
+            <h6 class="mb-2">Media Browser</h6>
+            <div id="media-list" class="media-list">
+              <div class="text-muted text-center small">
+                <p>Drag or import media here</p>
+              </div>
+            </div>
+            <input
+              type="file"
+              id="file-input"
+              accept="video/*,audio/*,image/*"
+              hidden
+              multiple
+            />
+            <button
+              type="button"
+              class="btn btn-primary btn-sm w-100 mt-2"
+              id="import-btn"
+            >
+              Import Media
+            </button>
+          </div>
+
+          <!-- Effects & Transitions -->
+          <div class="p-2">
+            <ul class="nav nav-tabs" role="tablist">
+              <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#effects"
+                  >Effects</a
+                >
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#transitions"
+                  >Transitions</a
+                >
+              </li>
+            </ul>
+            <div class="tab-content">
+              <div id="effects" class="tab-pane fade show active">
+                <div class="effect-item">Blur</div>
+                <div class="effect-item">Color Correction</div>
+                <div class="effect-item">Chroma Key</div>
+              </div>
+              <div id="transitions" class="tab-pane fade">
+                <div class="transition-item">Cross Dissolve</div>
+                <div class="transition-item">Dip to Black</div>
+                <div class="transition-item">Wipe</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER EDITING AREA -->
+        <div class="col-8 border border-black d-flex flex-column">
+          <!-- Preview Monitor -->
+          <div
+            class="previewSection border-bottom flex-grow-1 d-flex flex-column"
+          >
+            <div
+              class="canvas-container flex-grow-1 d-flex align-items-center justify-content-center"
+            >
+              <canvas
+                id="canvasPreview"
+                class="preview"
+                style="background: #000; max-width: 100%; max-height: 100%"
+              ></canvas>
+            </div>
+
+            <!-- Preview Controls -->
+            <div
+              class="preview-controls p-2 bg-dark d-flex justify-content-center align-items-center gap-3"
+            >
+              <button class="btn btn-sm btn-outline-light" id="goToStart">
+                ⏮
+              </button>
+              <button class="btn btn-sm btn-outline-light" id="stepBackward">
+                ⏪
+              </button>
+              <button class="btn btn-sm btn-primary" id="playButton">▶</button>
+              <button
+                class="btn btn-sm btn-outline-light hidden"
+                id="pauseButton"
+              >
+                ⏸
+              </button>
+              <button class="btn btn-sm btn-outline-light" id="stepForward">
+                ⏩
+              </button>
+              <button class="btn btn-sm btn-outline-light" id="goToEnd">
+                ⏭
+              </button>
+              <span class="text-light mx-2" id="timeDisplay">00:00:00</span>
+            </div>
+          </div>
+
+          <!-- Timeline Area -->
+          <div class="timeline-area flex-grow-1">
+            <!-- Track Headers -->
+            <div class="track-headers border-bottom bg-secondary">
+              <div class="track-header">V1</div>
+              <div class="track-header">V2</div>
+              <div class="track-header">A1</div>
+              <div class="track-header">A2</div>
+            </div>
+
+            <!-- Timeline with Tracks -->
+            <div class="timeline-container overflow-auto">
+              <div class="timeline" id="timeline">
+                <div class="ticks"></div>
+                <div class="labels" id="labels"></div>
+
+                <!-- Video Tracks -->
+                <div class="track video-track" data-track="v1">
+                  <div class="track-label">Video 1</div>
+                  <div class="track-content" id="videoTrack1"></div>
+                </div>
+                <div class="track video-track" data-track="v2">
+                  <div class="track-label">Video 2</div>
+                  <div class="track-content" id="videoTrack2"></div>
+                </div>
+
+                <!-- Audio Tracks -->
+                <div class="track audio-track" data-track="a1">
+                  <div class="track-label">Audio 1</div>
+                  <div class="track-content" id="audioTrack1"></div>
+                </div>
+                <div class="track audio-track" data-track="a2">
+                  <div class="track-label">Audio 2</div>
+                  <div class="track-content" id="audioTrack2"></div>
+                </div>
+
+                <div class="playhead" id="playhead">
+                  <div class="playhead-handle"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="col-2 border border-black d-flex flex-column">
+          <!-- Tools Panel -->
+          <div class="p-2 border-bottom">
+            <h6 class="mb-2">Tools</h6>
+            <div class="tools-grid">
+              <button
+                class="tool-btn active"
+                data-tool="select"
+                title="Selection Tool (V)"
+              >
+                <img src="public/select-tool.svg" alt="Select" width="20" />
+              </button>
+              <button class="tool-btn" data-tool="razor" title="Razor Tool (C)">
+                <img src="public/razor 1.svg" alt="Razor" width="20" />
+              </button>
+              <button class="tool-btn" data-tool="hand" title="Hand Tool (H)">
+                <img src="public/hand-tool.svg" alt="Hand" width="20" />
+              </button>
+              <button class="tool-btn" data-tool="text" title="Text Tool (T)">
+                <img src="public/text-tool.svg" alt="Text" width="20" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Properties Panel -->
+          <div class="p-2 border-bottom flex-grow-1">
+            <h6 class="mb-2" id="propertiesTitle">Properties</h6>
+            <div id="propertiesPanel">
+              <div class="text-muted text-center small">
+                Select a clip to view properties
+              </div>
+            </div>
+          </div>
+
+          <!-- Audio Mixer -->
+          <div class="p-2">
+            <h6 class="mb-2">Audio Mixer</h6>
+            <div class="audio-mixer">
+              <div class="audio-track-mixer">
+                <label>A1</label>
+                <input
+                  type="range"
+                  class="volume-slider"
+                  min="0"
+                  max="100"
+                  value="80"
+                />
+                <span class="volume-value">80%</span>
+              </div>
+              <div class="audio-track-mixer">
+                <label>A2</label>
+                <input
+                  type="range"
+                  class="volume-slider"
+                  min="0"
+                  max="100"
+                  value="80"
+                />
+                <span class="volume-value">80%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM STATUS BAR -->
+      <div class="row">
+        <div
+          class="col-12 border border-black pt-1 pb-1 bg-dark text-light d-flex justify-content-between"
+        >
+          <div id="statusMessage">Ready</div>
+          <div id="projectInfo">Sequence 1 • 1920x1080 • 30fps</div>
+          <div id="memoryUsage">Memory: 256MB</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden Video Element for Processing -->
+    <video id="previewVideo" hidden></video>
+
+    <script src="/js/themController.js"></script>
+    <script src="/js/file.js"></script>
+    <script src="/js/timeLine.js"></script>
+    <script src="/js/videoPreview.js"></script>
+    <script src="/js/tools.js"></script>
+    <script src="/js/properties.js"></script>
+    <script src="/js/audioMixer.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

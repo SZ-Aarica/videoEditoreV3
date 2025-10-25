@@ -16,7 +16,7 @@ class File {
   }
 
   setupEventListeners() {
-    // Use jQuery to bind clicking the import button to trigger file input
+    //bind clicking the import button to trigger file input
     $("#import-btn").on("click", () => {
       $("#file-input").trigger("click");
     });
@@ -52,9 +52,10 @@ class File {
   updateMediaBin() {
     const $mediaList = $("#media-list");
     $mediaList.empty();
+    $mediaList.addClass("row");
 
     this.mediaFiles.forEach((file, index) => {
-      const $li = $("<li>").addClass("media-item");
+      const $li = $("<span>").addClass("media-item col-4");
       const $mediaItem = $("<video>")
         .attr("id", `media-${index}`)
         .attr("src", this.createURL(file))
@@ -76,7 +77,6 @@ class File {
     });
   }
 
-  // In your VideoEditor class, replace the addDraggable method:
   addDraggable($element) {
     // $element is a jQuery object; get DOM node for drag events
     $element.attr("draggable", "true");

@@ -9,6 +9,7 @@
       rel="stylesheet"
       href="./node_modules/bootstrap/dist/css/bootstrap.min.css"
     />
+    <link rel="stylesheet" href="style/timeLine.css" />
     <link rel="stylesheet" href="style/style.css" />
   </head>
   <body>
@@ -34,27 +35,73 @@
             />
           </button>
         </div>
-        <div class="col-6 border border-black pt-2 pb-5 preview">
-          <video id="preview" controls width="100%" height="auto"></video>
+        <!--preview Video-->
+        <div class="col-6 border border-black previewSection">
+          <div
+            class="canvas-container"
+            style="width: 100%; max-width: 800px; margin: 0 auto"
+          >
+            <canvas
+              id="canvasPreview"
+              class="preview img-fluid"
+              style="width: 100%; height: auto; background: #000"
+            ></canvas>
+          </div>
+
+          <div>
+            <button class="previewButton" id="playButton">▶</button>
+            <button class="previewButton hidden" id="pauseButton">⏸</button>
+          </div>
+
+          <video
+            id="previewVideo"
+            controls
+            width="100%"
+            height="auto"
+            hidden
+          ></video>
         </div>
         <div class="col-6 border border-black pt-2 pb-5">
           details-> will handle at last
         </div>
-        <div class="col-3 border border-black pt-5 pb-5 section3">
-          <div class="media p-2 text-center">
-            <span>add your media</span>
-            <p>drag or import media here</p>
-            <input type="file" id="file-input" accept="video/*" hidden />
-            <button type="button" class="btn btn-primary" id="import-btn">
+        <div class="col-5 border border-black pb-5 section3">
+          <div class="media p-1 text-center">
+            <div id="media-list" class="">
+              <span>add your media</span>
+              <p>drag or import media here</p>
+            </div>
+
+            <input
+              type="file"
+              id="file-input"
+              accept="video/*"
+              hidden
+              multiple
+            />
+            <button
+              type="button"
+              class="btn btn-primary btn-sm"
+              id="import-btn"
+            >
               Import media
             </button>
           </div>
         </div>
-        <div class="col-3 border border-black text-center pt-1">
+        <div class="col-1 border border-black text-center">
           <h4>Tool bar</h4>
+          <div class="row">
+            <img
+              src="public/razor.svg"
+              alt=""
+              width="50px"
+              height="50px"
+              class="col-6"
+            />
+          </div>
         </div>
-        <div class="col-6 border border-black pt-2 pb-5">
-          drag and drop the video to the time line
+        <div
+          class="col-6 border border-black overflow-x-scroll overflow-y-hidden"
+        >
           <!-- Timeline -->
           <div class="timeline">
             <div class="timeline" id="timeline" aria-label="Video timeline">
@@ -66,7 +113,7 @@
               </div>
               <!-- Drop zone for video clips -->
               <div class="timeline-drop-zone" id="timelineDropZone">
-                <div class="drop-hint">Drag video clips here</div>
+                <div class="drop-hint"></div>
                 <div
                   class="video-clips-container"
                   id="videoClipsContainer"
@@ -90,5 +137,8 @@
 
     <script src="/js/themController.js"></script>
     <script src="/js/file.js"></script>
+    <script src="/js/timeLine.js"></script>
+    <script src="/js/videoPreview.js"></script>
+    <script src="/js/EventBus.js"></script>
   </body>
 </html>
