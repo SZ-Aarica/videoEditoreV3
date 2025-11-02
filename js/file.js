@@ -55,10 +55,11 @@ class File {
     $mediaList.addClass("row");
 
     this.mediaFiles.forEach((file, index) => {
-      const $li = $("<span>").addClass("media-item col-4");
+      const $li = $("<span>").addClass("media-item col-4 p-0");
       const $mediaItem = $("<video>")
         .attr("id", `media-${index}`)
         .attr("src", this.createURL(file))
+        .addClass(" img-fluid")
         .css({ width: "180px", height: "100px" });
 
       // Make draggable

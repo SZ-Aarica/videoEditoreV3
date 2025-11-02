@@ -26,13 +26,21 @@ class Timeline {
     this.scrollContainer = $(".col-6.overflow-x-scroll"); // Reference to scroll container
     this.visibleDuration = 20; // Show 20 seconds at a time
     this.scrollPosition = 0;
-    this.currentVideoDuration = 0;
+    //this.currentVideoDuration = 0;
+    this.totalSequenceDuration = 0;
+    this.videoSegments = [];
+    this.currentSegmentIndex = 0;
 
     // jQuery event listeners
     this.$videoClipsContainer.on("dragover", this.dragoverHandler);
     this.$videoClipsContainer.on("drop", this.dropHandler);
-
     this.init();
+  }
+  init() {
+    this.renderLabels();
+    this.setPlayheadAt(0);
+    this.setupUserInteractions();
+    this.setupEventListeners();
   }
   setupEventListeners() {
     // Listen to video events
@@ -93,21 +101,50 @@ class Timeline {
     const originalVideo = $draggedElement[0];
     const videoSrc = $draggedElement.attr("src");
 
-    eventBus.emit("VIDEO_LOAD_REQUEST", {
-      src: videoSrc,
+    const startTime = this.calculateNextStartTime();
+    const duration = originalVideo.duration || 0;
+
+    this.videoSegments.push({
       videoId: newId,
+      startTime: startTime,
+      duration: duration,
+      endTime: startTime + duration,
       element: $timelineVideo[0],
     });
+    this.totalSequenceDuration = startTime + duration;
+    eventBus.emit("VIDEO_ADDED_TO_TIMELINE", {
+      videoId: newId,
+      element: $timelineVideo[0], // Pass the actual DOM element
+      src: videoSrc,
+      duration: duration,
+      startTime: startTime,
+      endTime: startTime + originalVideo.duration,
+    });
+
     this.loadVideoWithDuration(originalVideo, (duration) => {
       this.createTimelineClip($timelineVideo, duration, newId);
-      eventBus.emit("VIDEO_ADDED_TO_TIMELINE", {
+      // Update VideoManager with actual duration
+      eventBus.emit("VIDEO_DURATION_UPDATED", {
         videoId: newId,
         duration: duration,
-        src: videoSrc,
       });
     });
   }
 
+  calculateNextStartTime() {
+    // Calculate where the next video should start in the sequence
+    const existingVideos = Array.from(
+      this.$videoClipsContainer.find(".video-clip-container")
+    );
+    let totalDuration = 0;
+
+    existingVideos.forEach((container) => {
+      const duration =
+        parseFloat($(container).find(".duration-label").text()) || 0;
+      totalDuration += duration;
+    });
+    return totalDuration;
+  }
   // Handle video duration loading
   loadVideoWithDuration(videoElement, callback) {
     if (videoElement.duration && videoElement.duration > 0) {
@@ -133,20 +170,49 @@ class Timeline {
 
   // Create timeline clip element
   createTimelineClip($videoElement, duration, clipId) {
-    this.setVideoDuration(duration);
+    //this.setVideoDuration(duration);
     //console.log("Video duration:", duration, "seconds");
     const clipData = this.calculateClipDimensions(duration);
     const $clipContainer = this.createClipContainer(clipData, clipId);
     const $styledVideo = this.styleVideoElement($videoElement);
     const $durationLabel = this.createDurationLabel(duration);
+    //add the button recycle bin
+    const deleteButton = this.createRecycleLabel();
 
-    $clipContainer.append($styledVideo, $durationLabel);
-    this.setupClipInteractions($clipContainer, clipId);
+    $clipContainer.append($styledVideo, $durationLabel, deleteButton);
+    this.setupClipInteractions($clipContainer, clipId, deleteButton);
     this.$videoClipsContainer.append($clipContainer);
 
     console.log(
       "Video successfully added to timeline with proper duration sizing"
     );
+  }
+  //add the delete button to videos
+  createRecycleLabel() {
+    const button = $(
+      '<button class="recycle-button" title="Remove from timeline" >' +
+        '<img src="public/bin.svg" alt="Delete" width="14" style="filter: invert(1)">' +
+        "</button>"
+    );
+
+    button.hover(
+      function () {
+        $(this).css({
+          opacity: "1",
+          background: "rgba(220, 53, 69, 0.9)",
+          transform: "scale(1.1)",
+        });
+      },
+      function () {
+        $(this).css({
+          opacity: "0.6",
+          background: "rgba(0, 0, 0, 0.7)",
+          transform: "scale(1)",
+        });
+      }
+    );
+
+    return button;
   }
 
   // Calculate clip position and size
@@ -175,7 +241,6 @@ class Timeline {
     const existingClips = this.$videoClipsContainer.find(
       ".video-clip-container"
     );
-    //console.log(existingClips.children());
     let maxEndTime = this.scrollPosition; // Start from current view
 
     existingClips.each((index, clip) => {
@@ -189,14 +254,13 @@ class Timeline {
       maxEndTime = Math.max(maxEndTime, clipEndTime);
     });
 
-    // Add a small gap between clips (0.5 seconds)
     return maxEndTime;
   }
 
   // Create the clip container
   createClipContainer(clipData, clipId) {
     const $clipContainer = $('<div class="video-clip-container"></div>');
-
+    $clipContainer.attr("data-clip-id", clipId);
     $clipContainer.css({
       position: "absolute",
       left: `${clipData.clipPosition}px`,
@@ -244,7 +308,7 @@ class Timeline {
   }
 
   // Setup drag and other interactions
-  setupClipInteractions($clipContainer, clipId) {
+  setupClipInteractions($clipContainer, clipId, deleteButton) {
     $clipContainer.attr("draggable", "true");
 
     $clipContainer.on("dragstart", (e) => {
@@ -262,9 +326,111 @@ class Timeline {
       e.stopPropagation();
       this.playFromClip($clipContainer);
     });
+    deleteButton.on("click", (e) => {
+      console.log("DELETE BUTTON CLICKED!");
+      e.stopPropagation();
+      e.preventDefault();
+      this.deleteClip($clipContainer, clipId);
+    });
   }
 
-  // Additional helper methods
+  //delete clip
+  deleteClip($clipContainer, clipId) {
+    Swal.fire({
+      html: '<div class="alertify">از حذف ویدیو اطمینان دارید؟</div>',
+      title:
+        '<div class="title-popup" style="background:#005f6b; text-align: right; color:white;">حذف</div>',
+      showCancelButton: true,
+      cancelButtonText: "لغو",
+      confirmButtonText: "بله",
+      customClass: {
+        actions: "custom-actions",
+      },
+    }).then((result) => {
+      const message = $("#resultMessage");
+      if (result.isConfirmed) {
+        /* message
+          .removeClass("cancelled")
+          .addClass("success")
+          .text("✅ Video deleted successfully!")
+          .show();*/
+        // console.log(45);
+        $clipContainer.remove();
+        this.videoSegments = this.videoSegments.filter(
+          (segment) => segment.videoId !== clipId
+        );
+        this.recalculateAllClipPositions();
+        eventBus.emit("VIDEO_REMOVED_FROM_TIMELINE", { videoId: clipId });
+        console.log("Clip deleted:", clipId);
+      } else if (result.isDismissed) {
+        console.log("Delete cancelled.");
+      }
+    });
+  }
+  recalculateAllClipPositions() {
+    // Sort by original start time to maintain order
+    const sortedSegments = [...this.videoSegments].sort(
+      (a, b) => a.startTime - b.startTime
+    );
+
+    let currentTime = 0;
+
+    // Reset and rebuild all positions
+    sortedSegments.forEach((segment) => {
+      // Update segment timing
+      segment.startTime = currentTime;
+      segment.endTime = currentTime + segment.duration;
+
+      const $clipContainer = this.$videoClipsContainer.find(
+        `[data-clip-id="${segment.videoId}"]`
+      );
+      if ($clipContainer.length) {
+        this.updateClipPosition(
+          $clipContainer,
+          segment.startTime,
+          segment.duration
+        );
+      }
+      currentTime += segment.duration;
+    });
+
+    // Update videoSegments with new timings
+    this.videoSegments = sortedSegments;
+    this.updateSequenceAfterDeletion();
+  }
+  // Add this method to update individual clip positions
+  updateClipPosition($clipContainer, startTime, duration) {
+    const totalWidth = 53 * 37.8;
+    const pixelsPerSecond = totalWidth / this.DURATION_SECONDS;
+
+    const clipPosition = startTime * pixelsPerSecond;
+    const clipWidth = duration * pixelsPerSecond;
+
+    // Update CSS position and size
+    $clipContainer.css({
+      left: `${clipPosition}px`,
+      width: `${clipWidth}px`,
+    });
+
+    // Update data attributes
+    $clipContainer.attr("data-start-time", startTime);
+    $clipContainer.attr("data-duration", duration);
+
+    // Update duration label
+    const $durationLabel = $clipContainer.find(".duration-label");
+    $durationLabel.text(`${duration.toFixed(1)}s`);
+  }
+
+  // Add this method to update the sequence after deletion
+  updateSequenceAfterDeletion() {
+    // Recalculate total sequence duration
+    this.totalSequenceDuration = this.videoSegments.reduce(
+      (max, segment) => Math.max(max, segment.endTime),
+      0
+    );
+    console.log("Updated total sequence duration:", this.totalSequenceDuration);
+  }
+  // adds the select class to the selected video
   selectClip($clipContainer) {
     // Deselect all other clips
     this.$videoClipsContainer
@@ -272,10 +438,8 @@ class Timeline {
       .removeClass("selected");
     // Select this clip
     $clipContainer.addClass("selected");
-
-    const startTime = parseFloat($clipContainer.attr("data-start-time"));
-    this.setPlayheadAt(startTime);
-
+    /* const startTime = parseFloat($clipContainer.attr("data-start-time"));
+    this.setPlayheadAt(startTime);*/
     console.log("Clip selected:", $clipContainer.attr("data-clip-id"));
   }
 
@@ -283,18 +447,6 @@ class Timeline {
     const startTime = parseFloat($clipContainer.attr("data-start-time"));
     this.setPlayheadAt(startTime);
     this.play();
-  }
-
-  setVideoDuration(duration) {
-    this.currentVideoDuration += duration;
-    console.log(this.currentVideoDuration);
-  }
-
-  init() {
-    this.renderLabels();
-    this.setPlayheadAt(0);
-    this.setupUserInteractions();
-    this.setupEventListeners();
   }
 
   // Format time as MM:SS
@@ -334,79 +486,29 @@ class Timeline {
       visibleEnd: this.scrollPosition + this.visibleDuration,
     };
   }
+  //place the playhead position
+  setPlayheadAt(sequenceTime) {
+    const maxTime = Math.max(this.totalSequenceDuration, this.DURATION_SECONDS);
+    this.currentTime = Math.max(0, Math.min(maxTime, sequenceTime));
+    const percentage = (this.currentTime / maxTime) * 100;
 
-  setPlayheadAt(seconds) {
-    this.currentTime = Math.max(0, Math.min(this.DURATION_SECONDS, seconds));
-    //console.log(this.currentTime);
-    const percentage = (this.currentTime / this.DURATION_SECONDS) * 100;
     this.$playhead.css("left", `${percentage}%`);
 
-    //console.log(this.currentTime + " " + percentage);
-    //this.events.trigger("playheadMoved", { time: seconds });
-    this.autoScrollToPlayhead();
+    this.scrollJump(percentage);
+    console.log(percentage);
+
+    //this.autoScrollToPlayhead();
   }
-
-  autoScrollToPlayhead() {
-    const containerWidth = this.scrollContainer.width();
-    const totalWidth = 53 * 37.8; // 53cm in pixels
-    const pixelsPerSecond = totalWidth / this.DURATION_SECONDS;
-
-    const playheadPixel = this.currentTime * pixelsPerSecond;
-    const bufferPixels = 100; // 100px buffer from edges
-
-    // Check if playhead is near the edge
-    const scrollLeft = this.scrollContainer.scrollLeft();
-    const scrollRight = scrollLeft + containerWidth;
-
-    if (playheadPixel > scrollRight - bufferPixels) {
-      // Scroll to show playhead with buffer
-      const targetScroll = playheadPixel - containerWidth + bufferPixels;
-      this.scrollContainer.animate({ scrollLeft: targetScroll }, 300);
-    } else if (playheadPixel < scrollLeft + bufferPixels) {
-      // Scroll to show playhead with buffer
-      const targetScroll = playheadPixel - bufferPixels;
-      this.scrollContainer.animate({ scrollLeft: targetScroll }, 300);
+  scrollJump($percentage) {
+    if (32.6751 <= $percentage && $percentage < 65.4394) {
+      this.scrollContainer.scrollLeft(652);
+    } else if ($percentage < 32) {
+      this.scrollContainer.scrollLeft(0);
+    } else if ($percentage >= 65.4394) {
+      this.scrollContainer.scrollLeft(1291);
     }
   }
-  getScrollInfo() {
-    const visible = this.getVisibleArea();
-    return {
-      visibleStart: this.scrollPosition,
-      visibleEnd: this.scrollPosition + this.visibleDuration,
-      currentTime: this.currentTime,
-      isPlayheadVisible:
-        this.currentTime >= this.scrollPosition &&
-        this.currentTime <= this.scrollPosition + this.visibleDuration,
-    };
-  }
 
-  scrollTo(targetTime) {
-    this.isScrolling = true;
-
-    // Calculate new scroll position
-    this.scrollPosition = Math.max(
-      0,
-      Math.min(this.DURATION_SECONDS - this.visibleDuration, targetTime)
-    );
-
-    // Calculate scroll pixels
-    const visible = this.getVisibleArea();
-    const scrollPixels =
-      (this.scrollPosition / this.DURATION_SECONDS) * visible.totalWidth;
-
-    // Animate the scroll
-    this.$timeline.animate(
-      {
-        scrollLeft: scrollPixels,
-      },
-      300,
-      () => {
-        this.isScrolling = false;
-      }
-    );
-
-    console.log(`Scrolled to: ${this.scrollPosition.toFixed(1)}s`);
-  }
   // Convert pixel position to time
   pixelToTime(pixelX) {
     // Get the scroll container's position and scroll
@@ -447,9 +549,6 @@ class Timeline {
   hideTimeMarker() {
     this.$marker.hide();
   }
-
-  // Play/pause animation
-
   setupUserInteractions() {
     // Playhead dragging
     const $handle = this.$playhead.find(".playhead-handle");
@@ -466,6 +565,7 @@ class Timeline {
       if (this.isDraggingPlayhead) {
         const time = this.pixelToTime(e.clientX);
         this.setPlayheadAt(time);
+
         // Notify video to seek
         eventBus.emit("TIMELINE_SEEK", { time });
       }
@@ -479,20 +579,22 @@ class Timeline {
       }
     });
   }
+  // Play/pause animation
   play() {
     if (this.isPlaying) return;
-
     this.isPlaying = true;
 
     const animate = () => {
       if (!this.isPlaying) return;
+      const sequenceTime = this.getCurrentSequenceTime();
 
-      // Sync with video's actual currentTime
-      const previewVideo = $("#previewVideo");
-      if (previewVideo) {
-        const videoTime = previewVideo.currentTime;
-        this.setPlayheadAt(videoTime);
-      }
+      this.setPlayheadAt(sequenceTime);
+
+      eventBus.emit("SEQUENCE_TIME_UPDATE", {
+        sequenceTime: sequenceTime,
+        totalDuration: this.totalSequenceDuration,
+      });
+      //console.log(this.totalSequenceDuration);
 
       this.animationId = requestAnimationFrame(animate);
     };
@@ -509,13 +611,25 @@ class Timeline {
       eventBus.emit("TIMELINE_PAUSE");
     }
   }
+  getCurrentSequenceTime() {
+    const previewVideo = document.getElementById("previewVideo");
+    //console.log(previewVideo);
+    if (!previewVideo) return this.currentTime;
 
-  togglePlay() {
-    if (this.isPlaying) {
-      this.pause();
-    } else {
-      this.play();
+    const currentVideoTime = previewVideo.currentTime;
+    const currentVideoSrc = previewVideo.src;
+    const currentSegment = this.videoSegments.find(
+      (segement) =>
+        segement.element.src.includes(currentVideoSrc) ||
+        segement.element === previewVideo
+    );
+
+    if (currentSegment) {
+      // console.log("+ ", currentSegment.startTime + currentVideoTime);
+      return currentSegment.startTime + currentVideoTime;
     }
+    //console.log("current time " + this.currentTime);
+    return this.currentTime;
   }
 }
 

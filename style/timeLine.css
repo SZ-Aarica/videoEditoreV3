@@ -102,8 +102,6 @@
 }
 
 /* Make sure timeline-container has proper positioning */
-
-
 .playhead-handle {
   position: absolute;
   top: -1px;
@@ -155,6 +153,24 @@
 .video-clip:hover {
   border-color: #fff;
 }
+.recycle-button{
+   position: absolute;
+  top: 2px;
+  right: 2px;
+  background: rgba(248, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
+
 
 .video-clip.dragging {
   opacity: 0.7;

@@ -1,0 +1,99 @@
+<mxfile host="65bd71144e">
+    <diagram id="D11sts3gMme3U83C_t4W" name="Page-1">
+        <mxGraphModel dx="1487" dy="851" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="13" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#60a917;fontColor=#ffffff;strokeColor=#2D7600;" parent="1" vertex="1">
+                    <mxGeometry x="435" y="80" width="30" height="750" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="Event Bus" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;rotation=-90;" parent="1" vertex="1">
+                    <mxGeometry x="402.75" y="217.75" width="92.5" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="80" width="200" height="320" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="&lt;h1 style=&quot;margin-top: 0px; line-height: 90%;&quot;&gt;TimeLine&lt;/h1&gt;&lt;p style=&quot;line-height: 90%;&quot;&gt;&amp;nbsp;+ play()&lt;br&gt;&amp;nbsp;+pause()&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;span style=&quot;background-color: transparent;&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp;+setPlayheadAt(time)&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent;&quot;&gt;+ processDroppedVideo(...)&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &lt;/span&gt;&lt;span style=&quot;background-color: transparent;&quot;&gt;+ setupEventListeners()&amp;nbsp; +&lt;/span&gt;&lt;span style=&quot;background-color: transparent;&quot;&gt;&amp;nbsp;setupUserInteractions()&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;background-color: transparent;&quot;&gt;.&lt;/span&gt;&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;fontColor=default;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="90" width="180" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;font-size: 9px; line-height: 90%;&quot;&gt;⮕ Listens:&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;background-color: transparent; font-size: 9px; line-height: 90%;&quot;&gt;- VIDEO_PLAYING&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;/font&gt;&lt;span style=&quot;background-color: transparent; font-size: 9px;&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;span style=&quot;font-size: 9px; background-color: transparent;&quot;&gt;- VIDEO_PAUSED&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;font-size: 9px; line-height: 90%;&quot;&gt;- VIDEO_TIME_UPDATE&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;/font&gt;&lt;span style=&quot;font-size: 9px; background-color: transparent;&quot;&gt;&amp;nbsp; &amp;nbsp; VIDEO_SEEKED&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;font-size: 9px; line-height: 90%;&quot;&gt;&amp;nbsp;⮕ Emits:&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;font-size: 9px; line-height: 90%;&quot;&gt;&amp;nbsp;- VIDEO_ADDED_TO_TIMELINE&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;font-size: 9px; line-height: 90%;&quot;&gt;&amp;nbsp;- VIDEO_DURATION_UPDATED&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;font-size: 9px; line-height: 90%;&quot;&gt;&amp;nbsp; - TIMELINE_PLAY&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;font-size: 9px; line-height: 90%;&quot;&gt;&amp;nbsp; - TIMELINE_PAUSE&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;font-size: 9px; line-height: 90%;&quot;&gt;&amp;nbsp; - TIMELINE_SEEK&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;line-height: 90%;&quot;&gt;&lt;font style=&quot;font-size: 9px; line-height: 90%;&quot;&gt;&amp;nbsp;- SEQUENCE_TIME_UPDATE&amp;nbsp;&lt;/font&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=light-dark(#000000,#FFFFFF);" vertex="1" parent="1">
+                    <mxGeometry x="45" y="240.75" width="190" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="" style="endArrow=none;dashed=1;html=1;exitX=0;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="45" y="231.75" as="sourcePoint"/>
+                        <mxPoint x="235" y="231.75" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="28" value="" style="endArrow=classic;html=1;entryX=1;entryY=0.25;entryDx=0;entryDy=0;fillColor=#60a917;strokeColor=#2D7600;dashed=1;" edge="1" parent="1" target="20">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="430" y="160" as="sourcePoint"/>
+                        <mxPoint x="390" y="120" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="30" value="on" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="28">
+                    <mxGeometry x="0.0654" y="1" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="29" value="" style="endArrow=classic;html=1;exitX=1.011;exitY=0.79;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.079;entryY=0.339;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=#1ba1e2;strokeColor=#006EAF;dashed=1;" edge="1" parent="1" source="20" target="13">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="430" y="320" as="sourcePoint"/>
+                        <mxPoint x="350" y="340" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="31" value="emit" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="29">
+                    <mxGeometry x="-0.1761" y="-3" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="32" value="" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="590" y="80" width="250" height="460" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" value="&lt;h1 style=&quot;margin-top: 0px; line-height: 90%;&quot;&gt;VideoPreview&lt;/h1&gt;&lt;div style=&quot;line-height: 70%;&quot;&gt;&lt;p data-pm-slice=&quot;0 0 []&quot;&gt;&amp;nbsp;+ playVideo()                              &lt;/p&gt;&lt;p&gt; + pauseVideo()                                 &lt;/p&gt;&lt;p&gt;+ seekTo(time)                                &lt;br&gt;&lt;/p&gt;&lt;p&gt;+ drawFrame()                                 &lt;br&gt;&lt;/p&gt;&lt;p&gt;+ updateMultiVideoView(videos)                &lt;br&gt;&lt;/p&gt;&lt;p&gt;+ playVideoSequence()&amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/p&gt;&lt;/div&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;spacing=1;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="600" y="90" width="180" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="34" value="" style="endArrow=none;html=1;strokeWidth=2;entryX=0.994;entryY=0.414;entryDx=0;entryDy=0;entryPerimeter=0;dashed=1;" edge="1" parent="1" target="32">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="591" y="270" as="sourcePoint"/>
+                        <mxPoint x="550" y="230" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="35" value="&lt;p data-pm-slice=&quot;0 0 []&quot; style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;⮕ Listens:                                   &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - TIMELINE_SEEK                             &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - TIMELINE_PLAY                             &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - TIMELINE_PAUSE                            &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - SEQUENCE_TIME_UPDATE                      &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - PREVIEW_VIDEO_LOAD                        &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - PLAY_SPECIFIC_VIDEO                       &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - VIDEOS_UPDATED                            &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt; ⮕ Emits:                                     &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - VIDEO_PLAYING                             &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - VIDEO_PAUSED                              &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - VIDEO_SEEKED                              &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - VIDEO_TIME_UPDATE                         &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - GET_VIDEO_AT_TIME                         &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - PLAY_SPECIFIC_VIDEO                       &lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 30%;&quot;&gt;&lt;font style=&quot;font-size: 11px; line-height: 30%;&quot;&gt;  - VIDEO_LOADED&amp;nbsp; &amp;nbsp;&amp;nbsp;&lt;/font&gt;&lt;/p&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="600" y="293" width="230" height="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="37" value="" style="endArrow=classic;html=1;exitX=-0.015;exitY=0.177;exitDx=0;exitDy=0;exitPerimeter=0;fillColor=#1ba1e2;strokeColor=#006EAF;dashed=1;entryX=0.855;entryY=0.108;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="32" target="13">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="580" y="270" as="sourcePoint"/>
+                        <mxPoint x="470" y="161" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="40" value="emit" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="37">
+                    <mxGeometry x="0.1882" y="2" relative="1" as="geometry">
+                        <mxPoint x="-1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="38" value="" style="endArrow=classic;html=1;exitX=1.097;exitY=0.348;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.002;entryY=0.466;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=#60a917;strokeColor=#2D7600;dashed=1;" edge="1" parent="1" source="13" target="32">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="530" y="250" as="sourcePoint"/>
+                        <mxPoint x="580" y="200" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="39" value="on" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="38">
+                    <mxGeometry x="-0.1877" y="6" relative="1" as="geometry">
+                        <mxPoint x="1" as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="41" value="&lt;p style=&quot;text-align: left;&quot; data-pm-slice=&quot;0 0 []&quot;&gt;&lt;br&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&lt;font style=&quot;font-size: 22px;&quot;&gt;File&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;+ handleFileUpload(files)              &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;+ addMediaToBin(file)                  &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;+ updateMediaBin()                     &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;+ addDraggable($element)               &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;+ previewVideo(video)                  &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;+ stopPreviewVideo(video)              &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&lt;br&gt;&lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;⮕ Role:                               &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;- Import and manage user media       &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;- Creates draggable &amp;lt;video&amp;gt; items    &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;- Feeds Timeline via drag-and-drop&lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;⮕ UI Interactions:                    &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;- #import-btn click → file input     &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;- #file-input change → upload        &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;- Hover video → preview              &lt;/p&gt;&lt;p style=&quot;text-align: left; line-height: 60%;&quot;&gt;&amp;nbsp;- Drag video → add to timeline&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&lt;/p&gt;&lt;p&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="456" width="280" height="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="" style="endArrow=none;dashed=1;html=1;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="50" y="642" as="sourcePoint"/>
+                        <mxPoint x="310" y="642" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
