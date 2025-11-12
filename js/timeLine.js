@@ -5,9 +5,11 @@ class Timeline {
     this.DURATION_SECONDS = 60;
     this.FPS = 24;
     this.isPlaying = false;
+    this.wasPlaying = false;
     this.currentTime = 0;
     this.animationId = null;
     this.isDraggingPlayhead = false;
+    this.isScrubbing = false;
 
     // jQuery element references
     this.$timeline = $("#timeline");
@@ -23,7 +25,7 @@ class Timeline {
     this.dropHandler = this.dropHandler.bind(this);
 
     //scrolling
-    this.scrollContainer = $(".col-6.overflow-x-scroll"); // Reference to scroll container
+    this.scrollContainer = $("#timeline-scroll"); // Reference to scroll container
     this.visibleDuration = 20; // Show 20 seconds at a time
     this.scrollPosition = 0;
     //this.currentVideoDuration = 0;
@@ -65,7 +67,41 @@ class Timeline {
     // Timeline user interactions
     this.setupUserInteractions();
   }
+  updateVideoSegments() {
+    // Emit the current video segments to VideoPreview
+    /* eventBus.emit("VIDEO_SEGMENTS_UPDATED", {
+      segments: this.videoSegments,
+    });*/
+  }
+  setupUserInteractions() {
+    // Playhead dragging
+    const $handle = this.$playhead.find(".playhead-handle");
+    $handle.on("mousedown", (e) => {
+      e.stopPropagation();
+      this.isDraggingPlayhead = true;
+      this.wasPlaying = this.isPlaying;
+      if (this.isPlaying) this.pause();
+      eventBus.emit("TIMELINE_PAUSE");
+      //console.log("mousedown");
+    });
+    $(document).on("mousemove", (e) => {
+      if (this.isDraggingPlayhead) {
+        const time = this.pixelToTime(e.clientX);
+        this.setPlayheadAt(time);
+        eventBus.emit("TIMELINE_SEEK", { time });
+        //console.log("mousemove");
+      }
+    });
 
+    $(document).on("mouseup", () => {
+      if (this.isDraggingPlayhead) {
+        this.isDraggingPlayhead = false;
+        if (this.wasPlaying) this.play();
+        //eventBus.emit("TIMELINE_PLAY");
+        //console.log("mouseup");
+      }
+    });
+  }
   dragoverHandler(event) {
     const originalEvent = event.originalEvent || event;
     originalEvent.preventDefault();
@@ -95,7 +131,8 @@ class Timeline {
   // Main processing method
   processDroppedVideo($draggedElement, originalId) {
     const $timelineVideo = $draggedElement.clone();
-    const newId = `timeline-${Date.now()}-${originalId}`;
+    const newId = `timeline-${originalId}`;
+    console.log(originalId);
     $timelineVideo.attr("id", newId);
 
     const originalVideo = $draggedElement[0];
@@ -111,6 +148,7 @@ class Timeline {
       endTime: startTime + duration,
       element: $timelineVideo[0],
     });
+    // this.updateVideoSegments();
     this.totalSequenceDuration = startTime + duration;
     eventBus.emit("VIDEO_ADDED_TO_TIMELINE", {
       videoId: newId,
@@ -327,7 +365,7 @@ class Timeline {
       this.playFromClip($clipContainer);
     });
     deleteButton.on("click", (e) => {
-      console.log("DELETE BUTTON CLICKED!");
+      // console.log("DELETE BUTTON CLICKED!");
       e.stopPropagation();
       e.preventDefault();
       this.deleteClip($clipContainer, clipId);
@@ -359,6 +397,7 @@ class Timeline {
         this.videoSegments = this.videoSegments.filter(
           (segment) => segment.videoId !== clipId
         );
+        // this.updateVideoSegments();
         this.recalculateAllClipPositions();
         eventBus.emit("VIDEO_REMOVED_FROM_TIMELINE", { videoId: clipId });
         console.log("Clip deleted:", clipId);
@@ -491,22 +530,9 @@ class Timeline {
     const maxTime = Math.max(this.totalSequenceDuration, this.DURATION_SECONDS);
     this.currentTime = Math.max(0, Math.min(maxTime, sequenceTime));
     const percentage = (this.currentTime / maxTime) * 100;
-
+    //console.log(percentage);
     this.$playhead.css("left", `${percentage}%`);
-
-    this.scrollJump(percentage);
-    console.log(percentage);
-
-    //this.autoScrollToPlayhead();
-  }
-  scrollJump($percentage) {
-    if (32.6751 <= $percentage && $percentage < 65.4394) {
-      this.scrollContainer.scrollLeft(652);
-    } else if ($percentage < 32) {
-      this.scrollContainer.scrollLeft(0);
-    } else if ($percentage >= 65.4394) {
-      this.scrollContainer.scrollLeft(1291);
-    }
+    this.autoScrollToPlayhead();
   }
 
   // Convert pixel position to time
@@ -520,11 +546,12 @@ class Timeline {
     const absoluteX = pixelX - scrollContainerRect.left + scrollLeft;
 
     // Convert to time
+    const maxTime = Math.max(this.totalSequenceDuration, this.DURATION_SECONDS);
     const percentage = Math.max(
       0,
       Math.min(100, (absoluteX / totalWidth) * 100)
     );
-    return (percentage / 100) * this.DURATION_SECONDS;
+    return (percentage / 100) * maxTime;
   }
 
   // Convert time to pixel position
@@ -549,36 +576,7 @@ class Timeline {
   hideTimeMarker() {
     this.$marker.hide();
   }
-  setupUserInteractions() {
-    // Playhead dragging
-    const $handle = this.$playhead.find(".playhead-handle");
 
-    $handle.on("mousedown", (e) => {
-      e.stopPropagation();
-      this.isDraggingPlayhead = true;
-
-      // Notify video to pause during scrubbing
-      eventBus.emit("TIMELINE_PAUSE");
-    });
-
-    $(document).on("mousemove", (e) => {
-      if (this.isDraggingPlayhead) {
-        const time = this.pixelToTime(e.clientX);
-        this.setPlayheadAt(time);
-
-        // Notify video to seek
-        eventBus.emit("TIMELINE_SEEK", { time });
-      }
-    });
-
-    $(document).on("mouseup", () => {
-      if (this.isDraggingPlayhead) {
-        this.isDraggingPlayhead = false;
-        // User might want to continue playing after scrubbing
-        eventBus.emit("TIMELINE_PLAY");
-      }
-    });
-  }
   // Play/pause animation
   play() {
     if (this.isPlaying) return;
@@ -589,12 +587,12 @@ class Timeline {
       const sequenceTime = this.getCurrentSequenceTime();
 
       this.setPlayheadAt(sequenceTime);
-
+      // console.log(sequenceTime);
+      this.autoScrollToPlayhead();
       eventBus.emit("SEQUENCE_TIME_UPDATE", {
         sequenceTime: sequenceTime,
         totalDuration: this.totalSequenceDuration,
       });
-      //console.log(this.totalSequenceDuration);
 
       this.animationId = requestAnimationFrame(animate);
     };
@@ -631,11 +629,57 @@ class Timeline {
     //console.log("current time " + this.currentTime);
     return this.currentTime;
   }
+  //scroll
+  /*autoScrollToPlayhead() {
+    const scrollContainer = this.scrollContainer[0];
+    if (!scrollContainer) return;
+
+    const currentScroll = scrollContainer.scrollLeft;
+    const containerWidth = scrollContainer.clientWidth;
+    const totalTimelineWidth = scrollContainer.scrollWidth;
+
+    // Convert playhead percentage to pixel position
+    //const playheadPercentage = ;
+    const playheadPixelPos = parseFloat(this.$playhead.css("left"));
+    // Define visible area with some padding
+    const visibleStart = currentScroll;
+    const visibleEnd = currentScroll + containerWidth;
+    /* console.log(`
+      debug---
+      visibleStart: ${visibleStart}
+      visibleEnd: ${visibleEnd}
+      playhead: ${playheadPixelPos}`);
+
+    if (playheadPixelPos < visibleStart || playheadPixelPos > visibleEnd) {
+      const targetScroll = playheadPixelPos - containerWidth / 2;
+      const boundedScroll = Math.max(
+        0,
+        Math.min(totalTimelineWidth - containerWidth, targetScroll)
+      );
+      //console.log(targetScroll, " ", boundedScroll);
+
+      console.log(`scrolling to ${boundedScroll}px`);
+      this.scrollContainer.scrollLeft(boundedScroll);
+    }
+  }*/
+  autoScrollToPlayhead() {
+    const playhead = this.$playhead[0];
+    const container = this.scrollContainer[0];
+    if (!playhead || !container) return;
+
+    const playheadLeft = playhead.offsetLeft;
+    const viewWidth = container.clientWidth;
+    const scrollLeft = container.scrollLeft;
+
+    if (playheadLeft > scrollLeft + viewWidth - 100) {
+      container.scrollLeft = playheadLeft - viewWidth + 150;
+    } else if (playheadLeft < scrollLeft + 100) {
+      container.scrollLeft = playheadLeft - 150;
+    }
+  }
 }
 
 // Initialize timeline when page loads
 $(document).ready(() => {
-  //  const videoPreview = new VideoPreview();
   const timeline = new Timeline();
-  //timeline.getVisibleArea();
 });

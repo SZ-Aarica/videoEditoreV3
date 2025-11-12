@@ -20,18 +20,11 @@ body{
 }
 .preview{
   background-color: #000000;
-  width: 500px;
-  height: 250px;
+
 }
 @media (min-width: 766px) and (max-width: 992px) {
   .previewSection{
     padding: 10px 20px;
-  }
-  .preview{
-    
-    width: 300px;
-    height: 180px;
-    
   }
 }
 

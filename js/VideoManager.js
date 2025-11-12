@@ -20,18 +20,34 @@ class VideoManager {
       this.removeVideo(data.videoId);
     });
     // Handle sequence playback requests
-    eventBus.on("GET_VIDEO_AT_TIME", (e, data, callback) => {
-      const videoAtTime = this.getVideoAtTime(data.time);
-      if (callback) callback(videoAtTime);
-      // callback(videoAtTime);
+    eventBus.on("GET_VIDEO_AT_TIME", (e, data) => {
+      const videoAtTime = this.getVideoAtTime(data.time, data.type);
+      //console.log("videomanager sending video at time", data.type);
+      if (data._callbackId) {
+        eventBus.sendCallback(data._callbackId, videoAtTime);
+      }
     });
 
     eventBus.on("PLAY_SPECIFIC_VIDEO", (e, data) => {
       this.playSpecificVideo(data.videoId, data.time);
     });
+    // Provide video segments to anyone who needs them
+    eventBus.on("GET_VIDEO_SEGMENTS", (e, data, callback) => {
+      if (callback) callback(this.videoSegments);
+    });
+    eventBus.on("GET_VIDEO_BY_ID", (e, data) => {
+      const video = this.getVideoById(data.videoId);
+
+      if (data._callbackId) {
+        eventBus.sendCallback(data._callbackId, video);
+      }
+    });
   }
+
   addVideo(videoId, element, src, duration, startTime) {
+    //videoId is being set as key while other data are values
     this.videos.set(videoId, {
+      videoId: videoId,
       element: element,
       src: src,
       duration: duration,
@@ -39,6 +55,7 @@ class VideoManager {
       endTime: startTime + duration,
       loaded: false,
     });
+    //
     this.addVideoSegment({
       videoId: videoId,
       startTime: startTime,
@@ -51,13 +68,18 @@ class VideoManager {
       this.getAllVideos()
     );
     const sortedVideos = this.getVideosSortedByTime();
+    //console.log(sortedVideos[0].element);
     //new videos added to the timeline
     eventBus.emit("VIDEOS_UPDATED", {
       videos: sortedVideos,
       totalDuration: this.getTotalDuration(),
     });
+    eventBus.emit("VIDEO_SEGMENTS_UPDATED", {
+      segments: this.videoSegments,
+    });
   }
   getVideosSortedByTime() {
+    //we are using the values of the object not the key and we dont return the keys
     return Array.from(this.videos.values()).sort(
       (a, b) => a.startTime - b.startTime
     );
@@ -82,9 +104,24 @@ class VideoManager {
       videos: sortedVideos,
       totalDuration: this.getTotalDuration(),
     });
+    eventBus.emit("VIDEO_SEGMENTS_UPDATED", {
+      segments: this.videoSegments,
+    });
     // console.log(this.getTotalDuration());
   }
-
+  /*getVideoForScrubbing(sequenceTime) {
+    const videoAtTime = this.getVideoAtTime(sequenceTime);
+    console.log(videoAtTime);
+    if (videoAtTime) {
+      const videoData = this.getVideoById(videoAtTime.videoId);
+      return {
+        ...videoAtTime,
+        src: videoData.src,
+        element: videoData.element,
+      };
+    }
+    return null;
+  }*/
   addVideoSegment(data) {
     this.videoSegments.push({
       videoId: data.videoId,
@@ -97,16 +134,16 @@ class VideoManager {
     // Sort by start time
     this.videoSegments.sort((a, b) => a.startTime - b.startTime);
   }
-
-  getVideoAtTime(sequenceTime) {
+  getVideoAtTime(sequenceTime, type) {
+   
     for (const segment of this.videoSegments) {
       if (
-        sequenceTime >= segment.startTime &&
-        sequenceTime <= segment.endTime
+        sequenceTime >= Math.trunc(segment.startTime) &&
+        sequenceTime < Math.trunc(segment.endTime)
       ) {
         return {
           videoId: segment.videoId,
-          timeInVideo: sequenceTime - segment.startTime,
+          timeInVideo: Math.max(0, sequenceTime - segment.startTime),
           segment: segment,
         };
       }
@@ -128,11 +165,11 @@ class VideoManager {
   getAllVideos() {
     return Array.from(this.videos.values());
   }
+
   getVideoById(videoId) {
     return this.videos.get(videoId);
   }
   getVideosByTime(time) {
-    // Get videos that are active at this timeline position
     return this.getAllVideos().filter(
       (video) => time >= video.startTime && time <= video.endTime
     );

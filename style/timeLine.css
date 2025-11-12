@@ -133,8 +133,7 @@
   z-index: 20;
   transform: translateX(-50%);
 }
-
-/* Video clip styles */
+/*
 .video-clip {
   position: absolute;
   height: 60px;
@@ -148,7 +147,7 @@
   overflow: hidden;
   user-select: none;
   z-index: 5;
-}
+}*/
 
 .video-clip:hover {
   border-color: #fff;
@@ -200,5 +199,12 @@
     object-fit: cover;
     pointer-events: none;
 }
+
+
+.col-6.overflow-x-scroll {
+    scroll-behavior: smooth; /* Enable smooth scrolling */
+   /*scrollbar-width: thin; /* Better scrollbar for Firefox */
+}
+
 
 

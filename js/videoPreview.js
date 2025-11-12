@@ -18,10 +18,19 @@ class VideoPreview {
     this.isSequencing = false;
 
     this.sequenceStartOffset = 0;
-
-    // this.onPlaybackChange = null;
+    this.isScrubbing = false;
     this.setupEventListeners();
     this.init();
+    // Temporary debug method
+    this.debugPlaylist = () => {
+      console.log("=== VIDEO PLAYLIST DEBUG ===");
+      console.log("Current video index:", this.currentVideoIndex);
+      console.log("Playlist length:", this.videoPlaylist.length);
+      console.log("Playlist contents:", this.videoPlaylist);
+      console.log("Current video:", this.videoPlaylist[this.currentVideoIndex]);
+      console.log("=== END DEBUG ===");
+    };
+    // this.debugPlaylist();
   }
 
   init() {
@@ -29,33 +38,38 @@ class VideoPreview {
   }
   setupEventListeners() {
     eventBus.on("TIMELINE_SEEK", (e, data) => {
-      this.seekTo(data.time);
+      //console.log("timeline seek to", data.time);
+      this.seekToSequenceTime(data.time);
     });
     eventBus.on("TIMELINE_PLAY", () => {
       this.playVideo();
+      //console.log("playvideo");
     });
     eventBus.on("TIMELINE_PAUSE", () => {
-      this.pauseVideo;
+      this.pauseVideo();
     });
     eventBus.on("SEQUENCE_TIME_UPDATE", (e, data) => {
       this.currentSequenceTime = data.sequenceTime;
+      //console.log("SEQUENCE_TIME_UPDATE");
       this.handleSequencePlayback(data.sequenceTime);
     });
     // Load specific video for preview
     eventBus.on("PREVIEW_VIDEO_LOAD", (e, data) => {
       this.loadPreviewVideo(data.src, data.autoPlay || false);
     });
+    //scrubbing
     this.$hiddenVideo.on("ended", () => {
       this.handleVideoEnded();
     });
-    eventBus.on("PLAY_SPECIFIC_VIDEO", (e, data) => {
-      this.playSpecificVideo(data.videoId, data.time);
-    });
 
+    eventBus.on("VIDEO_SEGMENTS_UPDATED", (e, data) => {
+      this.videoSegments = data.segments;
+      //console.log("Video segments updated:", this.videoSegments);
+    });
     // Multi-video rendering
     eventBus.on("VIDEOS_UPDATED", (e, data) => {
       // Optionally update multi-canvas view here
-      // console.log("video updated VP:" + data.videos[0] + data.totalDuration);
+      //console.log("video updated VP:" + data);
       this.updateMultiVideoView(data.videos);
     });
     this.$hiddenVideo.on("play", () => {
@@ -64,6 +78,7 @@ class VideoPreview {
         currentTime: this.$hiddenVideo[0].currentTime,
       });
     });
+
     this.$hiddenVideo.on("pause", () => {
       eventBus.emit("VIDEO_PAUSED", {
         currentTime: this.$hiddenVideo[0].currentTime,
@@ -82,17 +97,85 @@ class VideoPreview {
       });
     });
   }
+  seekToSequenceTime(sequenceTime) {
+    eventBus.emit(
+      "GET_VIDEO_AT_TIME",
+      { time: sequenceTime, type: "seek" },
+      (videoAtTime) => {
+        if (videoAtTime) {
+          console.log(videoAtTime);
+          this.loadVideoForTime(
+            videoAtTime.videoId,
+            videoAtTime.timeInVideo,
+            sequenceTime
+          );
+        } else {
+          console.log("No video found at sequence time:", sequenceTime);
+          this.pauseVideo();
+          this.clearCanvas();
+        }
+      }
+    );
+  }
+  loadVideoForTime(videoId, timeInVideo, sequenceTime) {
+    // Get video data from VideoManager
+    eventBus.emit("GET_VIDEO_BY_ID", { videoId: videoId }, (videoData) => {
+      if (!videoData) {
+        console.error("Video not found:", videoId);
+        return;
+      }
+      // console.log(this.currentVideoIndex);
+      const isDifferentVideo = this.$hiddenVideo[0].src !== videoData.src;
+
+      if (isDifferentVideo) {
+        console.log(`Switching to video: ${videoId}`);
+
+        const wasPlaying = !this.$hiddenVideo[0].paused;
+
+        this.hiddenVideoSrc(videoData.src);
+
+        this.$hiddenVideo.one("loadeddata", () => {
+          this.$hiddenVideo[0].currentTime = timeInVideo;
+          this.updateCurrentVideoIndex(videoId);
+          this.sequenceStartOffset = videoData.startTime || 0;
+
+          this.$hiddenVideo.one("seeked", () => {
+            this.updateCanvasFrame();
+
+            if (wasPlaying) {
+              this.playVideo();
+            }
+          });
+        });
+      } else {
+        console.log(`Seeking within current video to: ${timeInVideo}`);
+        this.$hiddenVideo[0].currentTime = timeInVideo;
+        this.updateCurrentVideoIndex(videoId);
+        this.sequenceStartOffset = videoData.startTime || 0;
+        this.updateCanvasFrame();
+      }
+    });
+  }
+
+  updateCurrentVideoIndex(videoId) {
+    this.currentVideoIndex = this.videoPlaylist.findIndex(
+      (video) => video.videoId === videoId
+    );
+    // console.log(`Updated current video index to: ${this.currentVideoIndex}`);
+  }
+
   //"VIDEOS_UPDATED" event
   updateMultiVideoView(videos) {
     this.videoPlaylist = videos;
+    //console.log(videos);
 
     //console.log("playlist updateed", this.videoPlaylist); && !this.isSequencing
     if (this.videoPlaylist.length > 0) {
       this.playVideoSequence();
-      console.log("length is more that 0 " + this.videoPlaylist);
     } else {
       //console.log("length " + this.videoPlaylist.length + this.isSequencing);
       this.hiddenVideoSrc("");
+      this.clearCanvas();
     }
     //this.hiddenVideoSrc(videos[0].src);
   }
@@ -102,19 +185,59 @@ class VideoPreview {
     this.loadAndPlayCurrentVideo();
   }
   handleSequencePlayback(sequenceTime) {
+    //console.log(sequenceTime);
     if (!this.isSequencing) return;
-    // Get which video should be playing at this sequence time
     eventBus.emit(
       "GET_VIDEO_AT_TIME",
-      {
-        time: sequenceTime,
-      },
-      (videoData) => {
-        if (videoData && videoData.videoId) {
-          this.playVideoAtTime(videoData.videoId, videoData.timeInVideo);
+      { time: sequenceTime, type: "playback" },
+      (videoAtTime) => {
+        if (videoAtTime) {
+          const currentVideoId = this.videoPlaylist[this.currentVideoIndex];
+          /* console.log(
+            videoAtTime.videoId,
+            " ",
+            currentVideoId,
+            "videoindex",
+            this.currentVideoIndex
+          );*/
+          if (videoAtTime.videoId !== currentVideoId.videoId) {
+            console.log(`Auto-switching to video: ${videoAtTime.videoId}`);
+            this.loadVideoForTime(
+              videoAtTime.videoId,
+              videoAtTime.timeInVideo,
+              sequenceTime
+            );
+          } else if (videoAtTime.timeInVideo >= this.$hiddenVideo[0].duration) {
+            this.playNextVideo();
+          }
         }
       }
     );
+  }
+  //canvas update
+  clearCanvas() {
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = "#000000";
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+  updateCanvasFrame() {
+    // Force immediate canvas update
+    if (this.$hiddenVideo[0].readyState >= 2) {
+      const video = this.$hiddenVideo[0];
+
+      if (
+        this.canvas.width !== video.videoWidth ||
+        this.canvas.height !== video.videoHeight
+      ) {
+        this.canvas.width = video.videoWidth;
+        this.canvas.height = video.videoHeight;
+      }
+
+      this.ctx.imageSmoothingEnabled = true;
+      this.ctx.imageSmoothingQuality = "high";
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.drawImage(video, 0, 0, this.canvas.width, this.canvas.height);
+    }
   }
   playVideoAtTime(videoId, timeInVideo) {
     console.log("Playing video", videoId, "at time", timeInVideo);
@@ -123,13 +246,7 @@ class VideoPreview {
       time: timeInVideo,
     });
   }
-  playSpecificVideo(videoId, timeInVideo) {
-    const videoData = videoManager.getVideoById(videoId);
-    if (videoData) {
-      console.log("Switching to video:", videoId);
-      this.loadAndPlayVideo(videoData, timeInVideo);
-    }
-  }
+
   loadAndPlayCurrentVideo() {
     if (this.currentVideoIndex >= this.videoPlaylist.length) {
       //end
@@ -138,11 +255,13 @@ class VideoPreview {
       return;
     }
     const currentVideoData = this.videoPlaylist[this.currentVideoIndex];
+    //console.log(this.currentVideoIndex + "lengh " + this.videoPlaylist);
     this.sequenceStartOffset = currentVideoData.startTime || 0;
 
     //console.log(`playing video ${currentVideoData.src}`);
     //load the current video
     this.hiddenVideoSrc(currentVideoData.src);
+    console.log(currentVideoData.src);
     //event to play the next when video is ended
     this.$hiddenVideo.off("ended");
     this.$hiddenVideo.on("ended", () => {
@@ -158,21 +277,25 @@ class VideoPreview {
     }
   }
   loadAndPlayVideo(videoData, startTime = 0) {
-    // Load the video
     this.hiddenVideoSrc(videoData.src);
 
-    // Wait for video to load, then seek and play
     this.$hiddenVideo.one("loadeddata", () => {
       this.$hiddenVideo[0].currentTime = startTime;
+
+      // Only auto-play if it's NOT the first video
       if (this.currentVideoIndex > 0) {
-        this.playVideo().then(() => {
-          console.log("Video playing from time:", startTime);
-        });
+        this.playVideo();
+      } else {
+        // Just load + seek, wait for user to press Play
+        this.updateCanvasFrame();
       }
     });
   }
+
   playNextVideo() {
     this.currentVideoIndex++;
+    //this.debugPlaylist();
+    console.log(`Moving to video index: ${this.currentVideoIndex}`);
     if (this.currentVideoIndex < this.videoPlaylist.length) {
       this.loadAndPlayCurrentVideo();
     } else {
@@ -226,6 +349,7 @@ class VideoPreview {
     this.$hiddenVideo[0].pause(); //pause the video
     this.$playButton.removeClass("hidden");
     this.$pauseButton.addClass("hidden");
+    this.isDrawing = false;
   }
 
   drawFrame() {
