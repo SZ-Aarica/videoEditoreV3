@@ -72,7 +72,11 @@ class File {
       $li.on("mouseleave", () => {
         this.stopPreviewVideo($mediaItem[0]);
       });
-
+     /* const button = $(
+        '<button class="recycle-button" title="Remove from timeline" >' +
+          '<img src="public/bin.svg" alt="Delete" width="14" style="filter: invert(1)">' +
+          "</button>"
+      );*/
       $li.append($mediaItem);
       $mediaList.append($li);
     });
@@ -90,20 +94,6 @@ class File {
     event.dataTransfer.setData("text/plain", event.target.id);
     event.dataTransfer.effectAllowed = "copy";
   };
-
-  // Optional: if you want a dropHandler in this class, uncomment and adapt
-  /*
-  dropHandler(event) {
-    event.preventDefault();
-    const id = event.dataTransfer.getData('text/plain');
-    event.currentTarget.appendChild(document.getElementById(id));
-  }
-  */
-
-  // Helper (example)
-  addToTimeline(file) {
-    console.log("Adding to timeline:", file.name);
-  }
 }
 
 // Initialize after DOM is ready

@@ -89,7 +89,7 @@
   box-shadow: 0 0 8px rgba(255, 235, 59, 0.8) !important;
  
 }
-/* Playhead should be positioned relative to the scroll container */
+
 .playhead {
   position: absolute;
   top: 0;
@@ -101,7 +101,6 @@
   z-index: 10;
 }
 
-/* Make sure timeline-container has proper positioning */
 .playhead-handle {
   position: absolute;
   top: -1px;
@@ -133,21 +132,6 @@
   z-index: 20;
   transform: translateX(-50%);
 }
-/*
-.video-clip {
-  position: absolute;
-  height: 60px;
-  background: linear-gradient(45deg, #667eea, #764ba2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  padding: 5px;
-  color: white;
-  font-size: 10px;
-  cursor: move;
-  overflow: hidden;
-  user-select: none;
-  z-index: 5;
-}*/
 
 .video-clip:hover {
   border-color: #fff;
@@ -199,12 +183,81 @@
     object-fit: cover;
     pointer-events: none;
 }
-
-
 .col-6.overflow-x-scroll {
-    scroll-behavior: smooth; /* Enable smooth scrolling */
-   /*scrollbar-width: thin; /* Better scrollbar for Firefox */
+    scroll-behavior: smooth; 
+}
+/* TRIM HANDLES */
+/* Trim Handles */
+.trim-handle {
+    position: absolute;
+    top: 0;
+    width: 8px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    cursor: col-resize;
+    z-index: 15;
+    border-radius: 2px;
+    transition: all 0.2s ease;
 }
 
+.trim-handle:hover {
+    background: #ffeb3b;
+    width: 10px;
+}
 
+.trim-handle.left {
+    left: -4px;
+}
 
+.trim-handle.right {
+    right: -4px;
+}
+
+.trim-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 60%;
+    background: #333;
+    border-radius: 1px;
+}
+
+/* Visual feedback during trimming */
+.video-clip-container.trimming {
+    border-color: #ffeb3b !important;
+    box-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+}
+
+.trim-preview {
+    position: absolute;
+    top: -25px;
+    background: #333;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: monospace;
+    white-space: nowrap;
+    z-index: 20;
+}
+
+/* Dimmed areas for trimmed portions */
+.trim-overlay {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+    z-index: 5;
+}
+
+.trim-overlay.left {
+    left: 0;
+}
+
+.trim-overlay.right {
+    right: 0;
+}

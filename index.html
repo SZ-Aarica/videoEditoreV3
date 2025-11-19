@@ -141,10 +141,16 @@
       <div id="resultMessage" class="result-message"></div>
       <button id="scroll">scroll</button>
     </div>
-    <div hidden>version 3.3.2</div>
+    <div hidden>version 3.3.3</div>
     <script>
       $("#scroll").click(function () {
         alert($("#timeline-scroll").scrollLeft() + " px");
+      });
+
+      $(document).ready(() => {
+        const timeline = new Timeline();
+
+        window.trimManager = new TrimManager(timeline); // ← PASS TIMELINE
       });
     </script>
     <script src="/js/themController.js"></script>
@@ -153,5 +159,7 @@
     <script src="/js/videoPreview.js"></script>
     <script src="/js/EventBus.js"></script>
     <script src="/js/VideoManager.js"></script>
+    <script src="/js/ScrollManager.js"></script>
+    <script src="/js/TrimManager.js"></script>
   </body>
 </html>

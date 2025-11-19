@@ -3,7 +3,6 @@ class Timeline {
     //this.videoPreview = videoPreview;
     this.events = $({});
     this.DURATION_SECONDS = 60;
-    this.FPS = 24;
     this.isPlaying = false;
     this.wasPlaying = false;
     this.currentTime = 0;
@@ -63,16 +62,15 @@ class Timeline {
         this.setPlayheadAt(data.time);
       }
     });
+    //listening for trimmed videos
+    eventBus.on("CLIP_TRIMMED", (e, data) => {
+      this.handleClipTrimmed(data.clipId, data.startTime, data.duration);
+    });
 
     // Timeline user interactions
     this.setupUserInteractions();
   }
-  updateVideoSegments() {
-    // Emit the current video segments to VideoPreview
-    /* eventBus.emit("VIDEO_SEGMENTS_UPDATED", {
-      segments: this.videoSegments,
-    });*/
-  }
+
   setupUserInteractions() {
     // Playhead dragging
     const $handle = this.$playhead.find(".playhead-handle");
@@ -82,14 +80,12 @@ class Timeline {
       this.wasPlaying = this.isPlaying;
       if (this.isPlaying) this.pause();
       eventBus.emit("TIMELINE_PAUSE");
-      //console.log("mousedown");
     });
     $(document).on("mousemove", (e) => {
       if (this.isDraggingPlayhead) {
         const time = this.pixelToTime(e.clientX);
         this.setPlayheadAt(time);
         eventBus.emit("TIMELINE_SEEK", { time });
-        //console.log("mousemove");
       }
     });
 
@@ -98,10 +94,10 @@ class Timeline {
         this.isDraggingPlayhead = false;
         if (this.wasPlaying) this.play();
         //eventBus.emit("TIMELINE_PLAY");
-        //console.log("mouseup");
       }
     });
   }
+  //drag drop
   dragoverHandler(event) {
     const originalEvent = event.originalEvent || event;
     originalEvent.preventDefault();
@@ -132,7 +128,6 @@ class Timeline {
   processDroppedVideo($draggedElement, originalId) {
     const $timelineVideo = $draggedElement.clone();
     const newId = `timeline-${originalId}`;
-    console.log(originalId);
     $timelineVideo.attr("id", newId);
 
     const originalVideo = $draggedElement[0];
@@ -148,7 +143,7 @@ class Timeline {
       endTime: startTime + duration,
       element: $timelineVideo[0],
     });
-    // this.updateVideoSegments();
+
     this.totalSequenceDuration = startTime + duration;
     eventBus.emit("VIDEO_ADDED_TO_TIMELINE", {
       videoId: newId,
@@ -160,8 +155,10 @@ class Timeline {
     });
 
     this.loadVideoWithDuration(originalVideo, (duration) => {
+      //console.log(duration);
       this.createTimelineClip($timelineVideo, duration, newId);
       // Update VideoManager with actual duration
+      //this.updateTotalSequenceDuration();
       eventBus.emit("VIDEO_DURATION_UPDATED", {
         videoId: newId,
         duration: duration,
@@ -185,6 +182,7 @@ class Timeline {
   }
   // Handle video duration loading
   loadVideoWithDuration(videoElement, callback) {
+    //console.log(videoElement.duration);
     if (videoElement.duration && videoElement.duration > 0) {
       callback(videoElement.duration);
     } else {
@@ -220,10 +218,6 @@ class Timeline {
     $clipContainer.append($styledVideo, $durationLabel, deleteButton);
     this.setupClipInteractions($clipContainer, clipId, deleteButton);
     this.$videoClipsContainer.append($clipContainer);
-
-    console.log(
-      "Video successfully added to timeline with proper duration sizing"
-    );
   }
   //add the delete button to videos
   createRecycleLabel() {
@@ -291,6 +285,7 @@ class Timeline {
       const clipEndTime = (clipLeft + clipWidth) / pixelsPerSecond;
       maxEndTime = Math.max(maxEndTime, clipEndTime);
     });
+    //console.log(maxEndTime);
 
     return maxEndTime;
   }
@@ -310,14 +305,12 @@ class Timeline {
       overflow: "hidden",
       cursor: "move",
     });
-
-    $clipContainer.attr("data-clip-id", clipId);
     $clipContainer.attr("data-start-time", clipData.startTime);
     $clipContainer.attr(
       "data-duration",
       clipData.clipWidth / clipData.pixelsPerSecond
     );
-
+    eventBus.emit("CLIP_CREATED", { clip: $clipContainer });
     return $clipContainer;
   }
 
@@ -347,11 +340,12 @@ class Timeline {
 
   // Setup drag and other interactions
   setupClipInteractions($clipContainer, clipId, deleteButton) {
-    $clipContainer.attr("draggable", "true");
+    //drag existing videos in timeline
+    //$clipContainer.attr("draggable", "true");
 
-    $clipContainer.on("dragstart", (e) => {
+    /* $clipContainer.on("dragstart", (e) => {
       e.originalEvent.dataTransfer.setData("text/plain", clipId);
-    });
+    });*/
 
     // Add click to select/preview
     $clipContainer.on("click", (e) => {
@@ -397,7 +391,7 @@ class Timeline {
         this.videoSegments = this.videoSegments.filter(
           (segment) => segment.videoId !== clipId
         );
-        // this.updateVideoSegments();
+
         this.recalculateAllClipPositions();
         eventBus.emit("VIDEO_REMOVED_FROM_TIMELINE", { videoId: clipId });
         console.log("Clip deleted:", clipId);
@@ -435,9 +429,9 @@ class Timeline {
 
     // Update videoSegments with new timings
     this.videoSegments = sortedSegments;
-    this.updateSequenceAfterDeletion();
+    this.updateTotalSequenceDuration();
   }
-  // Add this method to update individual clip positions
+  // method to update individual clip positions
   updateClipPosition($clipContainer, startTime, duration) {
     const totalWidth = 53 * 37.8;
     const pixelsPerSecond = totalWidth / this.DURATION_SECONDS;
@@ -459,16 +453,6 @@ class Timeline {
     const $durationLabel = $clipContainer.find(".duration-label");
     $durationLabel.text(`${duration.toFixed(1)}s`);
   }
-
-  // Add this method to update the sequence after deletion
-  updateSequenceAfterDeletion() {
-    // Recalculate total sequence duration
-    this.totalSequenceDuration = this.videoSegments.reduce(
-      (max, segment) => Math.max(max, segment.endTime),
-      0
-    );
-    console.log("Updated total sequence duration:", this.totalSequenceDuration);
-  }
   // adds the select class to the selected video
   selectClip($clipContainer) {
     // Deselect all other clips
@@ -479,7 +463,6 @@ class Timeline {
     $clipContainer.addClass("selected");
     /* const startTime = parseFloat($clipContainer.attr("data-start-time"));
     this.setPlayheadAt(startTime);*/
-    console.log("Clip selected:", $clipContainer.attr("data-clip-id"));
   }
 
   playFromClip($clipContainer) {
@@ -512,27 +495,16 @@ class Timeline {
     }
   }
 
-  getVisibleArea() {
-    const timelineWidth = this.$timeline.width();
-    const totalWidth = 53 * 37.8;
-    const pixelsPerSecond = totalWidth / this.DURATION_SECONDS;
-    console.log(timelineWidth + " " + totalWidth);
-    return {
-      timelineWidth,
-      totalWidth,
-      pixelsPerSecond,
-      visibleStart: this.scrollPosition,
-      visibleEnd: this.scrollPosition + this.visibleDuration,
-    };
-  }
   //place the playhead position
   setPlayheadAt(sequenceTime) {
     const maxTime = Math.max(this.totalSequenceDuration, this.DURATION_SECONDS);
     this.currentTime = Math.max(0, Math.min(maxTime, sequenceTime));
+    //console.log(this.currentTime);
     const percentage = (this.currentTime / maxTime) * 100;
     //console.log(percentage);
     this.$playhead.css("left", `${percentage}%`);
-    this.autoScrollToPlayhead();
+    eventBus.emit("AUTO_SCROLL");
+    //this.autoScrollToPlayhead();
   }
 
   // Convert pixel position to time
@@ -561,22 +533,6 @@ class Timeline {
     return (percentage / 100) * timelineRect.width;
   }
 
-  showTimeMarker(clientX, time) {
-    const timelineRect = this.$timeline[0].getBoundingClientRect();
-    const relativeX = clientX - timelineRect.left;
-    const percentage = (relativeX / timelineRect.width) * 100;
-
-    this.$marker.text(this.formatTime(time));
-    this.$marker.css({
-      left: `${percentage}%`,
-      display: "block",
-    });
-  }
-
-  hideTimeMarker() {
-    this.$marker.hide();
-  }
-
   // Play/pause animation
   play() {
     if (this.isPlaying) return;
@@ -587,20 +543,15 @@ class Timeline {
       const sequenceTime = this.getCurrentSequenceTime();
 
       this.setPlayheadAt(sequenceTime);
-      // console.log(sequenceTime);
-      this.autoScrollToPlayhead();
       eventBus.emit("SEQUENCE_TIME_UPDATE", {
         sequenceTime: sequenceTime,
         totalDuration: this.totalSequenceDuration,
       });
-
       this.animationId = requestAnimationFrame(animate);
     };
-
     this.animationId = requestAnimationFrame(animate);
     eventBus.emit("TIMELINE_PLAY");
   }
-
   pause() {
     this.isPlaying = false;
     if (this.animationId) {
@@ -609,6 +560,7 @@ class Timeline {
       eventBus.emit("TIMELINE_PAUSE");
     }
   }
+
   getCurrentSequenceTime() {
     const previewVideo = document.getElementById("previewVideo");
     //console.log(previewVideo);
@@ -623,63 +575,60 @@ class Timeline {
     );
 
     if (currentSegment) {
-      // console.log("+ ", currentSegment.startTime + currentVideoTime);
+      /* if (
+        currentSegment.startTime + currentVideoTime <
+        currentSegment.endTime
+      ) {*/
+      //console.log(currentSegment);
       return currentSegment.startTime + currentVideoTime;
     }
-    //console.log("current time " + this.currentTime);
     return this.currentTime;
   }
-  //scroll
-  /*autoScrollToPlayhead() {
-    const scrollContainer = this.scrollContainer[0];
-    if (!scrollContainer) return;
+  getPixelsPerSecond() {
+    const totalWidth = 53 * 37.8;
+    return totalWidth / this.DURATION_SECONDS;
+  }
+  handleClipTrimmed(clipId, newStartTime, newDuration) {
+    console.log(
+      `Clip ${clipId} trimmed: start=${newStartTime}s, duration=${newDuration}s`
+    );
 
-    const currentScroll = scrollContainer.scrollLeft;
-    const containerWidth = scrollContainer.clientWidth;
-    const totalTimelineWidth = scrollContainer.scrollWidth;
-
-    // Convert playhead percentage to pixel position
-    //const playheadPercentage = ;
-    const playheadPixelPos = parseFloat(this.$playhead.css("left"));
-    // Define visible area with some padding
-    const visibleStart = currentScroll;
-    const visibleEnd = currentScroll + containerWidth;
-    /* console.log(`
-      debug---
-      visibleStart: ${visibleStart}
-      visibleEnd: ${visibleEnd}
-      playhead: ${playheadPixelPos}`);
-
-    if (playheadPixelPos < visibleStart || playheadPixelPos > visibleEnd) {
-      const targetScroll = playheadPixelPos - containerWidth / 2;
-      const boundedScroll = Math.max(
-        0,
-        Math.min(totalTimelineWidth - containerWidth, targetScroll)
-      );
-      //console.log(targetScroll, " ", boundedScroll);
-
-      console.log(`scrolling to ${boundedScroll}px`);
-      this.scrollContainer.scrollLeft(boundedScroll);
+    // Update video segments in timeline
+    const segmentIndex = this.videoSegments.findIndex(
+      (seg) => seg.videoId === clipId
+    );
+    if (segmentIndex !== -1) {
+      this.videoSegments[segmentIndex].startTime = newStartTime;
+      this.videoSegments[segmentIndex].duration = newDuration;
+      this.videoSegments[segmentIndex].endTime = newStartTime + newDuration;
+      // console.log(this.videoSegments[segmentIndex]);
     }
-  }*/
-  autoScrollToPlayhead() {
-    const playhead = this.$playhead[0];
-    const container = this.scrollContainer[0];
-    if (!playhead || !container) return;
+    //console.log(this.videoSegments);
+    eventBus.emit("VIDEO_TRIMMED", {
+      videoId: clipId,
+      startTime: newStartTime,
+      duration: newDuration,
+      endTime: newStartTime + newDuration,
+    });
 
-    const playheadLeft = playhead.offsetLeft;
-    const viewWidth = container.clientWidth;
-    const scrollLeft = container.scrollLeft;
+    // Update total sequence duration
+    //this.updateTotalSequenceDuration();
+    this.recalculateAllClipPositions();
 
-    if (playheadLeft > scrollLeft + viewWidth - 100) {
-      container.scrollLeft = playheadLeft - viewWidth + 150;
-    } else if (playheadLeft < scrollLeft + 100) {
-      container.scrollLeft = playheadLeft - 150;
-    }
+    //console.log(this.totalSequenceDuration);
+  }
+
+  updateTotalSequenceDuration() {
+    //
+    this.totalSequenceDuration = this.videoSegments.reduce(
+      (max, segment) => max + segment.duration,
+      0
+    );
+    console.log("Updated total sequence duration:", this.totalSequenceDuration);
   }
 }
 
 // Initialize timeline when page loads
 $(document).ready(() => {
-  const timeline = new Timeline();
+  //const timeline = new Timeline();
 });

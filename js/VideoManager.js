@@ -16,13 +16,39 @@ class VideoManager {
         data.startTime
       );
     });
+    eventBus.on("VIDEO_TRIMMED", (e, data) => {
+      const video = this.videos.get(data.videoId);
+      if (video) {
+        video.startTime = data.startTime;
+        video.duration = data.duration;
+        video.endTime = data.startTime + data.duration;
+
+        const segment = this.videoSegments.find(
+          (s) => s.videoId === data.videoId
+        );
+        if (segment) {
+          Object.assign(segment, {
+            startTime: data.startTime,
+            duration: data.duration,
+            endTime: video.endTime,
+          });
+        }
+
+        //this.videoSegments.sort((a, b) => a.startTime - b.startTime);
+        this.getVideosSortedByTime();
+        eventBus.emit("VIDEO_SEGMENTS_UPDATED", {
+          segments: this.videoSegments,
+        });
+        // till here we got start and end time of the trimmed videos
+      }
+    });
     eventBus.on("VIDEO_REMOVED_FROM_TIMELINE", (e, data) => {
       this.removeVideo(data.videoId);
     });
     // Handle sequence playback requests
     eventBus.on("GET_VIDEO_AT_TIME", (e, data) => {
-      const videoAtTime = this.getVideoAtTime(data.time, data.type);
-      //console.log("videomanager sending video at time", data.type);
+      const videoAtTime = this.getVideoAtTime(data.time);
+      //console.log("videomanager sending video at time", videoAtTime);
       if (data._callbackId) {
         eventBus.sendCallback(data._callbackId, videoAtTime);
       }
@@ -37,7 +63,6 @@ class VideoManager {
     });
     eventBus.on("GET_VIDEO_BY_ID", (e, data) => {
       const video = this.getVideoById(data.videoId);
-
       if (data._callbackId) {
         eventBus.sendCallback(data._callbackId, video);
       }
@@ -63,10 +88,10 @@ class VideoManager {
       endTime: startTime + duration,
       src: src,
     });
-    console.log(
+   /* console.log(
       `Video added to the timeline from videomanager : ${videoId}`,
       this.getAllVideos()
-    );
+    );*/
     const sortedVideos = this.getVideosSortedByTime();
     //console.log(sortedVideos[0].element);
     //new videos added to the timeline
@@ -109,19 +134,7 @@ class VideoManager {
     });
     // console.log(this.getTotalDuration());
   }
-  /*getVideoForScrubbing(sequenceTime) {
-    const videoAtTime = this.getVideoAtTime(sequenceTime);
-    console.log(videoAtTime);
-    if (videoAtTime) {
-      const videoData = this.getVideoById(videoAtTime.videoId);
-      return {
-        ...videoAtTime,
-        src: videoData.src,
-        element: videoData.element,
-      };
-    }
-    return null;
-  }*/
+
   addVideoSegment(data) {
     this.videoSegments.push({
       videoId: data.videoId,
@@ -130,21 +143,22 @@ class VideoManager {
       endTime: data.endTime,
       src: data.src,
     });
-
     // Sort by start time
     this.videoSegments.sort((a, b) => a.startTime - b.startTime);
   }
-  getVideoAtTime(sequenceTime, type) {
-   
+  getVideoAtTime(sequenceTime) {
+    const seqSec = sequenceTime;
+
     for (const segment of this.videoSegments) {
-      if (
-        sequenceTime >= Math.trunc(segment.startTime) &&
-        sequenceTime < Math.trunc(segment.endTime)
-      ) {
+      const startSec = segment.startTime.toFixed(1);
+      const endSec = segment.endTime.toFixed(1);
+      //console.log(startSec, endSec);
+
+      if (seqSec >= startSec && seqSec < endSec) {
         return {
           videoId: segment.videoId,
-          timeInVideo: Math.max(0, sequenceTime - segment.startTime),
-          segment: segment,
+          timeInVideo: sequenceTime - segment.startTime, // Keep float for video
+          segment,
         };
       }
     }
